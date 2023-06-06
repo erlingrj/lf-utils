@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# This script runs the Spotless formatter on your commit before pushing it.
+# If the formatter introduces new changes to any file WITHOUT unstaged changes,
+# then these files are added to a new commit and everything is pushed to origin.
+# To use it, add a symoblic link from this file to .git/hooks/pre-push
+
+# Get all the files with unstaged changes before running the formatter.
+BEFORE=$(git diff --name-only)
+
+# Run the formatter.
+./gradlew spotlessApply
+
+# Get all the files with changes after running the formatter.
+AFTER=$(git diff --name-only)
+
+# Compare the two lists and find out the files that were untouched before running the formatter.
+ONLY_FORMATTED=$(comm -13 <(sort <<<"$BEFORE") <(sort <<<"$AFTER"))
+
+# If ONLY_FORMATTED is not empty, then there were some files that were only changed by the formatter.
+if [[ -n "$ONLY_FORMATTED" ]]; then
+    # Stage only the files changed by the formatter.
+    git add $ONLY_FORMATTED
+
+    # Check if there is anything to commit.
+    if git diff-index --quiet HEAD --; then
+        echo "No changes to commit after running formatter."
+    else
+        git commit -m "Code aut-formatted with Spotless"
+        git push origin HEAD
+    fi
+else
+    echo "Formatter did not make any changes to commit"
+fi
+
+# Print out all files touched by Spotless. Some might be committed
+if [[ -n "$AFTER" ]]; then
+    echo "Spotless formatted the following files: ${AFTER[@]}"
+fi
+
+exit 0
