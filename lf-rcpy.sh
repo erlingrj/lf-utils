@@ -13,7 +13,8 @@ lf_root=$(git rev-parse --show-toplevel)
 # Store the paths to the runtimes
 reactor_c="${lf_root}/core/src/main/resources/lib/c/reactor-c"
 
-# Store the "signs" telling us what kind of language we are working in
+# Store the "signs". I.e. a file, which existence tells us that we are working
+# with a particular target language.
 reactor_c_sign=core/reactor.c
 
 if [ -f "$reactor_c_sign" ]; then
